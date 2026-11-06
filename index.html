@@ -14,7 +14,36 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <link rel="stylesheet" href="styles.css?v=2.2">
+    <link rel="stylesheet" href="styles.css?v=3.1">
+    <script>
+      // --- Session guard: this dashboard is now behind login. ---
+      // Runs before the page body is shown; bounces to the correct login
+      // page (based on the role stored at login) if there's no valid,
+      // unexpired session token. This is a client-side convenience check
+      // only — the real protection has to be server-side (verifying the
+      // token on each API call) before this is trusted for anything
+      // sensitive; see PRODUCTION_READINESS.md.
+      (function () {
+        var token = localStorage.getItem('tv_session_token');
+        var role = localStorage.getItem('tv_role');
+        document.documentElement.setAttribute('data-role', role || '');
+        var loginPage = role === 'importer' ? 'importer-login.html' : (role === 'exporter' ? 'exporter-login.html' : 'portal-select.html');
+        if (!token) {
+          window.location.replace(loginPage);
+          return;
+        }
+        fetch('/api/auth/session?token=' + encodeURIComponent(token))
+          .then(function (res) { return res.json(); })
+          .then(function (data) {
+            if (!data.valid) {
+              localStorage.removeItem('tv_session_token');
+              localStorage.removeItem('tv_role');
+              window.location.replace(loginPage);
+            }
+          })
+          .catch(function () { /* if the server is unreachable, don't lock the user out — fail open for this demo */ });
+      })();
+    </script>
 </head>
 <body>
 
@@ -63,27 +92,70 @@
 
         <!-- Status Indicator & Controls -->
         <div class="nav-right">
-            <!-- Compact Scout Security Selector in Header -->
-            <div class="scout-pill-badge">
-              <span class="scout-dot green" id="scoutStatusDot"></span>
-              <span class="scout-label">Scout Security:</span>
-              <select id="scoutScenarioSelect" class="scout-pill-select" onchange="switchScoutScenario(this.value)">
-                <option value="CLEAN">Clean Session</option>
-                <option value="MFA_FAIL">MFA Fail (3/3)</option>
-                <option value="IMPOSSIBLE_TRAVEL">Geo Anomaly (Lagos)</option>
-                <option value="CARDING_ATTACK">Carding Declines (4x)</option>
-                <option value="ACCOUNT_TAKEOVER">Account Takeover</option>
-              </select>
-            </div>
+            <!-- Compact AI status: dot + short label (app.js updates these ids) -->
             <div class="status-indicator-box">
                 <div class="api-status-dot ok" id="api-status-indicator" title="System Active">
                     <span class="status-pulse"></span>
                 </div>
                 <span class="api-status-label" id="api-status-label">AI Ready</span>
             </div>
-            <button class="btn-ghost" id="btn-reset-all">
-                <i data-lucide="rotate-ccw"></i> Reset
-            </button>
+
+            <!-- Live account-security badge (real state, refreshed every 3 s by integrated_payment.js).
+                 The demo scenario dropdown inside it is shown only in test-lab mode. -->
+            <div class="scout-pill-badge" id="scout-header-pill">
+                <span class="scout-dot green" id="scoutStatusDot"></span>
+                <span class="scout-label sec-prefix">Account security:</span><span class="scout-label" id="liveSecurityText" style="font-weight:800" title="">Checking...</span>
+                <select id="scoutScenarioSelect" class="scout-pill-select" style="display:none" onchange="switchScoutScenario(this.value)">
+                    <option value="CLEAN">Clean Session</option>
+                    <option value="MFA_FAIL">MFA Fail (3/3)</option>
+                    <option value="IMPOSSIBLE_TRAVEL">Geo Anomaly (Lagos)</option>
+                    <option value="CARDING_ATTACK">Carding Declines (4x)</option>
+                    <option value="ACCOUNT_TAKEOVER">Account Takeover</option>
+                </select>
+            </div>
+
+            <!-- Same page for exporter and importer for now: one "Pay Now" button. (Role-specific pages come later; the Receivables drawer below is kept for then.) -->
+            <button type="button" class="nav-payment-btn" onclick="openPaymentDrawer()"><i data-lucide="credit-card"></i> Pay Now</button>
+
+            <!-- Always-visible Admin link (password-protected page: blocked accounts / unblock) -->
+            <a class="nav-admin-link" href="admin.html" title="Admin: view blocked accounts and unblock them"><i data-lucide="shield-alert"></i> Admin</a>
+
+            <!-- Single account menu: portal, admin, reset, log out -->
+            <div class="user-menu" id="user-menu">
+                <button type="button" class="user-menu-btn" id="user-menu-btn" aria-haspopup="true" aria-expanded="false">
+                    <span class="user-avatar" id="user-avatar">U</span>
+                    <span class="user-menu-label" id="portal-session-label">Portal</span>
+                    <i data-lucide="chevron-down"></i>
+                </button>
+                <div class="user-menu-panel" id="user-menu-panel" role="menu" hidden>
+                    <div class="user-menu-head"><strong id="user-menu-role">Portal</strong><small>Signed in</small></div>
+                    <button type="button" class="user-menu-item" role="menuitem" id="btn-reset-all"><i data-lucide="rotate-ccw"></i> Reset session</button>
+                    <button type="button" class="user-menu-item danger" role="menuitem" onclick="portalLogout()"><i data-lucide="log-out"></i> Log out</button>
+                </div>
+            </div>
+            <script>
+              (function () {
+                var role = localStorage.getItem('tv_role');
+                var name = role === 'importer' ? 'Importer Portal' : (role === 'exporter' ? 'Exporter Portal' : 'Portal');
+                document.getElementById('portal-session-label').textContent = name;
+                document.getElementById('user-menu-role').textContent = name;
+                document.getElementById('user-avatar').textContent = role ? role.charAt(0).toUpperCase() : 'U';
+
+                var btn = document.getElementById('user-menu-btn');
+                var panel = document.getElementById('user-menu-panel');
+                function setMenu(open) { panel.hidden = !open; btn.setAttribute('aria-expanded', open ? 'true' : 'false'); }
+                btn.addEventListener('click', function (e) { e.stopPropagation(); setMenu(panel.hidden); });
+                document.addEventListener('click', function (e) { if (!panel.hidden && !panel.contains(e.target)) setMenu(false); });
+                panel.addEventListener('click', function () { setTimeout(function () { setMenu(false); }, 0); });
+                document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+              })();
+              function portalLogout() {
+                var role = localStorage.getItem('tv_role');
+                localStorage.removeItem('tv_session_token');
+                localStorage.removeItem('tv_role');
+                window.location.href = (role === 'importer' ? 'importer-login.html' : 'exporter-login.html');
+              }
+            </script>
         </div>
     </div>
 </header>
@@ -275,6 +347,25 @@
                         <div class="fc-desc">Detects inconsistencies, missing fields, and severe trade compliance issues.</div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Integrated payment + fraud operations -->
+            <div class="sidebar-card risk-monitor-card">
+                <div class="roadmap-header">
+                    <i data-lucide="shield-check"></i>
+                    <span>Risk & Fraud Monitor</span>
+                    <span class="monitor-active">Active</span>
+                </div>
+                <div class="monitor-row"><span><i data-lucide="credit-card"></i> Carding Detection</span><strong>Enabled</strong></div>
+                <div class="monitor-row"><span><i data-lucide="bot"></i> Bot Detection</span><strong>Enabled</strong></div>
+                <div class="monitor-row"><span><i data-lucide="shield"></i> MFA Protection</span><strong>Enabled</strong></div>
+                <div class="monitor-row"><span><i data-lucide="map-pin"></i> Geo-Velocity Check</span><strong>Enabled</strong></div>
+            </div>
+
+            <div class="sidebar-card quick-actions-card">
+                <div class="roadmap-header"><i data-lucide="zap"></i><span>Quick Actions</span></div>
+                <button class="quick-action-btn" type="button" onclick="openPaymentDrawer()"><i data-lucide="credit-card"></i><span>Pay Now<small>Screened before authorization</small></span><i data-lucide="chevron-right"></i></button>
+                
             </div>
 
             <!-- Supported Document Types Section -->
@@ -619,6 +710,49 @@
                 <div class="sanctions-frm-body" id="scout-audit-body"></div>
             </div>
 
+            <!-- LIVE Fraud Engine Demo Panel — real calls to the actual detection
+                 endpoints (as opposed to the canned scenario dropdown above),
+                 so this can be demoed by clicking buttons instead of curl. -->
+            <div id="live-scout-demo-box" class="sanctions-frm-box">
+                <div class="sanctions-frm-header scout-header-flex">
+                    <div class="scout-header-left">
+                        <div class="sanctions-title">
+                            <i data-lucide="zap"></i> Live Fraud Engine Demo (Real Endpoints)
+                        </div>
+                        <span id="live-demo-status-note" style="font-size:12px;color:#64748b;">
+                            Calls the real /api/scout/* endpoints on this server — not a canned demo.
+                        </span>
+                    </div>
+                </div>
+                <div class="sanctions-frm-body" style="padding:16px;">
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">
+                            SCOUT_API_KEY (set on the server; paste it here for this browser session only — never hardcoded)
+                        </label>
+                        <input type="password" id="live-demo-api-key" placeholder="Paste your SCOUT_API_KEY"
+                               style="width:100%;max-width:420px;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;">
+                    </div>
+
+                    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+                        <button type="button" class="action-btn btn-outline live-demo-btn" onclick="liveDemoCardTesting()">
+                            Simulate Card Testing (3x failed, same card)
+                        </button>
+                        <button type="button" class="action-btn btn-outline live-demo-btn" onclick="liveDemoBotSpeed()">
+                            Simulate Bot Checkout (rapid-fire, &lt;800ms apart)
+                        </button>
+                        <button type="button" class="action-btn btn-outline live-demo-btn" onclick="liveDemoOtpFail()">
+                            Simulate 3x Wrong OTP
+                        </button>
+                        <button type="button" class="action-btn btn-outline live-demo-btn" onclick="liveDemoImpossibleTravel()">
+                            Simulate Impossible Travel (Mumbai &rarr; Lagos)
+                        </button>
+                    </div>
+
+                    <pre id="live-demo-output" style="background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;
+                         font-size:12px;max-height:340px;overflow:auto;white-space:pre-wrap;">Click a button above to run a real attack simulation against the live endpoints.</pre>
+                </div>
+            </div>
+
             <div class="rules-list" id="rules-list"></div>
         </div>
     </div>
@@ -801,6 +935,78 @@
     </div>
 </section>
 
+<!-- Integrated Payment Drawer -->
+<div id="paymentDrawer" class="drawer-overlay hidden" aria-hidden="true">
+  <aside class="payment-drawer" role="dialog" aria-modal="true" aria-labelledby="payment-drawer-title">
+    <div class="drawer-header">
+      <div><div class="drawer-eyebrow">PAYMENTS</div><h2 id="payment-drawer-title">Pay Shipment Invoice</h2><p>Payment is screened by TradeVerify before authorization.</p></div>
+      <button class="drawer-close" type="button" onclick="closePaymentDrawer()" aria-label="Close">&times;</button>
+    </div>
+    <div class="payment-summary-card"><div><span>Invoice</span><strong id="pf-ref">BAE/2026-27/0842</strong></div><div><span>Amount</span><strong id="pf-amount-display">$1,240.00</strong></div></div>
+    <div class="payment-field"><label for="pf-ref-input">Invoice / Shipment Reference</label><input id="pf-ref-input" value="BAE/2026-27/0842" autocomplete="off"></div>
+    <div id="stripe-payment-fields">
+      <div class="payment-field"><label>Secure Card Payment <small>Stripe-hosted field</small></label><div id="stripe-card-element" class="stripe-card-element"></div><div id="stripe-card-errors" class="stripe-field-error" role="alert"></div></div>
+    </div>
+    <div id="local-payment-fields" class="hidden">
+      <div class="payment-field"><label for="local-card-number">Card number <small>Development test only</small></label><div class="card-input-wrap"><input id="local-card-number" inputmode="numeric" autocomplete="cc-number" placeholder="1234 5678 9012 3456" maxlength="23"><span class="card-brand" id="card-brand"></span></div><div class="field-error" id="err-card"></div></div>
+      <div class="payment-two-col">
+        <div class="payment-field"><label for="local-expiry">Expiry</label><input id="local-expiry" inputmode="numeric" autocomplete="cc-exp" placeholder="MM / YY" maxlength="7"><div class="field-error" id="err-expiry"></div></div>
+        <div class="payment-field"><label for="local-cvv">CVV</label><input id="local-cvv" inputmode="numeric" autocomplete="cc-csc" placeholder="CVV" maxlength="4"><div class="field-error" id="err-cvv"></div></div>
+      </div>
+      <div class="payment-field"><label for="local-postcode">Billing postcode <small>optional</small></label><input id="local-postcode" autocomplete="postal-code" placeholder="e.g. 560001" maxlength="10"></div>
+      <div class="payment-test-hint">Test only: security code <b>000</b> or postcode <b>00000</b> pretends the card network said &ldquo;no match&rdquo;.</div>
+      <div id="local-test-hint" class="payment-test-hint"></div>
+    </div>
+    <button id="pf-pay" class="payment-primary-btn" type="button" onclick="submitIntegratedPayment()"><i data-lucide="lock-keyhole"></i> Pay Securely</button>
+    <div class="trust-row"><span><i data-lucide="lock"></i> Encrypted</span><span><i data-lucide="shield-check"></i> Fraud-screened</span><span><i data-lucide="eye-off"></i> Card data never stored</span></div>
+    <div id="pf-result" class="payment-result" role="status" aria-live="polite"></div>
+    <div id="payment-mode-note" class="payment-security-note"><i data-lucide="shield-check"></i><span></span></div>
+    <button id="open-fraud-lab" class="hidden" type="button" onclick="closePaymentDrawer();openFraudTestDrawer()" style="margin-top:12px;width:100%;height:40px;border:1px dashed #E8C64A;background:#FFF9DF;border-radius:9px;font:800 12px Inter,Arial,sans-serif;color:#111;cursor:pointer">Open Fraud Test Lab (development only)</button>
+  </aside>
+</div>
+
+<!-- Receivables Drawer (exporter view: money in, not a card form) -->
+<div id="receivablesDrawer" class="drawer-overlay hidden" aria-hidden="true">
+  <aside class="payment-drawer" role="dialog" aria-modal="true" aria-labelledby="rc-title">
+    <div class="drawer-header">
+      <div><div class="drawer-eyebrow">RECEIVABLES</div><h2 id="rc-title">Payments Received</h2><p>Track whether the importer has paid your invoice. Updates automatically.</p></div>
+      <button class="drawer-close" type="button" onclick="closeReceivablesDrawer()" aria-label="Close">&times;</button>
+    </div>
+    <div class="payment-field"><label for="rc-ref-input">Invoice / Shipment Reference</label><input id="rc-ref-input" value="BAE/2026-27/0842" autocomplete="off"></div>
+    <div class="payment-summary-card"><div><span>Invoice</span><strong id="rc-ref">&mdash;</strong></div><div><span>Amount</span><strong id="rc-amount">&mdash;</strong></div></div>
+    <div class="rc-status-row"><span>Status</span><span id="rc-status" class="rc-badge open">Loading&hellip;</span></div>
+    <ol class="pay-timeline" id="rc-timeline">
+      <li data-step="issued"><b></b><div><strong>Invoice issued</strong><small>Sent to the importer</small></div></li>
+      <li data-step="initiated"><b></b><div><strong>Payment initiated</strong><small>Importer started payment</small></div></li>
+      <li data-step="screened"><b></b><div><strong>Fraud check</strong><small>Screened by TradeVerify</small></div></li>
+      <li data-step="settled"><b></b><div><strong>Settled</strong><small>Funds confirmed</small></div></li>
+    </ol>
+    <div id="rc-error" class="payment-result" role="status" aria-live="polite"></div>
+    <button type="button" class="rc-link" onclick="closeReceivablesDrawer();openPaymentDrawer()">Need to make a payment instead? Open payment form &rarr;</button>
+  </aside>
+</div>
+
+<!-- Fraud Test Lab (development only; the server refuses these calls outside ENVIRONMENT=development) -->
+<div id="fraudTestDrawer" class="drawer-overlay hidden" aria-hidden="true">
+  <aside class="payment-drawer fraud-test-drawer" role="dialog" aria-modal="true" aria-labelledby="fraud-test-title">
+    <div class="drawer-header">
+      <div><div class="drawer-eyebrow">DEVELOPMENT ONLY</div><h2 id="fraud-test-title">Fraud Test Lab</h2><p>Fires controlled payment events through the same fraud engine the customer checkout uses. No real payment is processed.</p></div>
+      <button class="drawer-close" type="button" onclick="closeFraudTestDrawer()" aria-label="Close">&times;</button>
+    </div>
+    <div class="test-warning"><i data-lucide="alert-triangle"></i><span>These tests run as the account you are logged in as. If that account is already locked from an earlier test, clear it in Admin (or restart the server) and run again.</span></div>
+    <div class="test-actions">
+      <button type="button" onclick="runIntegratedCardingTest()"><i data-lucide="credit-card"></i><span><strong>Problem 3: Stolen card, 4 failures in a row</strong><small>Back-to-back declines, human pace</small></span></button>
+      <button type="button" onclick="runIntegratedBotTest()"><i data-lucide="bot"></i><span><strong>Problem 4: Bot-speed attack</strong><small>Payments 150 ms apart</small></span></button>
+      <button type="button" onclick="runIntegratedGenuineTest()"><i data-lucide="user-check"></i><span><strong>Genuine customer</strong><small>Fails 3 times, then pays: never blocked</small></span></button>
+      <button type="button" onclick="runIntegratedSweepTest()"><i data-lucide="layers"></i><span><strong>Problem 3: Card sweep</strong><small>4 different cards, all declined</small></span></button>
+    </div>
+    <div id="botAlertBanner" class="bot-alert-banner hidden" role="alert"></div>
+    <button type="button" onclick="runIntegratedReset()" style="width:100%;height:40px;margin:0 0 12px;border:1px dashed #C62828;background:#FFF5F5;border-radius:9px;font:800 12px Inter,Arial,sans-serif;color:#7A1212;cursor:pointer">Reset test invoice and blocks (development only)</button>
+    <pre id="integratedTestOutput" class="test-output">Choose a test above.</pre>
+    <a href="admin.html" style="display:block;margin-top:12px;font:700 12px Inter,Arial,sans-serif;color:#8A6500">Open Admin panel (view blocked accounts / unblock) &rarr;</a>
+  </aside>
+</div>
+
 <!-- Contact Exporter Clarification Modal -->
 <div id="contactExporterModal" class="modal-overlay hidden">
   <div class="modal-container" style="max-width: 640px;">
@@ -860,6 +1066,8 @@
 
 <!-- SheetJS for Excel exports -->
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<script src="integrated_payment.js?v=37.0"></script>
 <script src="app.js?v=2.2"></script>
 <script>
     // Initialize Lucide icons on load

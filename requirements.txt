@@ -1,0 +1,19 @@
+# Core (already required by the existing document-verification engines)
+pillow
+opencv-python
+pymupdf          # provides `fitz`
+numpy
+pdfplumber
+pypdfium2
+rapidfuzz
+rapidocr_onnxruntime
+
+# Production-only, optional: required to share fraud-detection state (Problems
+# 3-6) across multiple server processes/instances. Without it, account_scout.py
+# falls back to an in-memory store that is NOT safe once you run more than one
+# worker — see the warning it logs at startup. Install this and set REDIS_URL
+# before scaling out.
+redis>=5.0
+
+# Stripe test-mode payment integration
+stripe>=12.0

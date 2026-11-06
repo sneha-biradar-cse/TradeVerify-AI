@@ -10,3 +10,5 @@ __pycache__/
 .cache/
 logs/*.log
 scratch/
+
+payment_ledger.json

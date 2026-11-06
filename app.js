@@ -1842,6 +1842,109 @@ TradeVerify AI Enterprise Risk Mitigation Unit`;
     window.downloadDiscrepancyAuditPDF = downloadDiscrepancyAuditPDF;
     window.switchScoutScenario = switchScoutScenario;
 
+    // --------------------------------------------------------------------- //
+    // LIVE Fraud Engine Demo — real calls to the actual /api/scout/* endpoints,
+    // for the demo panel above. Requires SCOUT_API_KEY to be pasted into the
+    // page's own input field (never hardcoded here) since these endpoints
+    // require server-to-server auth.
+    // --------------------------------------------------------------------- //
+
+    function _liveDemoKey() {
+        const key = document.getElementById('live-demo-api-key')?.value || '';
+        if (!key) {
+            alert('Paste your SCOUT_API_KEY into the field above first (the same value you set with $env:SCOUT_API_KEY).');
+        }
+        return key;
+    }
+
+    function _liveDemoLog(label, data) {
+        const out = document.getElementById('live-demo-output');
+        if (!out) return;
+        const line = `\n[${new Date().toLocaleTimeString()}] ${label}\n${JSON.stringify(data, null, 2)}\n`;
+        out.textContent = (out.dataset.started === '1' ? out.textContent : '') + line;
+        out.dataset.started = '1';
+        out.scrollTop = out.scrollHeight;
+    }
+
+    async function _liveDemoPost(path, body) {
+        const key = _liveDemoKey();
+        if (!key) return null;
+        try {
+            const res = await fetch(path, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Scout-Api-Key': key },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            return data;
+        } catch (err) {
+            _liveDemoLog(`ERROR calling ${path}`, { error: String(err) });
+            return null;
+        }
+    }
+
+    async function liveDemoCardTesting() {
+        const out = document.getElementById('live-demo-output');
+        if (out) { out.textContent = ''; out.dataset.started = '0'; }
+        const sessionId = 'demo-card-' + Date.now();
+        for (let i = 1; i <= 4; i++) {
+            const data = await _liveDemoPost('/api/scout/payment-attempt', {
+                session_id: sessionId, card_fingerprint: 'demo_card_A', success: false
+            });
+            if (!data) return;
+            _liveDemoLog(`Attempt ${i} — blocked: ${data.blocked}`, data);
+            if (data.blocked) break;
+            await new Promise(r => setTimeout(r, 500));
+        }
+    }
+
+    async function liveDemoBotSpeed() {
+        const out = document.getElementById('live-demo-output');
+        if (out) { out.textContent = ''; out.dataset.started = '0'; }
+        const sessionId = 'demo-bot-' + Date.now();
+        for (let i = 1; i <= 5; i++) {
+            const data = await _liveDemoPost('/api/scout/payment-attempt', {
+                session_id: sessionId, card_fingerprint: 'card_' + i, success: false
+            });
+            if (!data) return;
+            _liveDemoLog(`Rapid attempt ${i} — bot status: ${data.bot_audit?.status}`, data);
+            if (data.blocked) break;
+            await new Promise(r => setTimeout(r, 250)); // well under the 800ms human-plausible floor
+        }
+    }
+
+    async function liveDemoOtpFail() {
+        const out = document.getElementById('live-demo-output');
+        if (out) { out.textContent = ''; out.dataset.started = '0'; }
+        const sessionId = 'demo-otp-' + Date.now();
+        for (let i = 1; i <= 3; i++) {
+            const data = await _liveDemoPost('/api/scout/otp-attempt', { session_id: sessionId, success: false });
+            if (!data) return;
+            _liveDemoLog(`Wrong OTP attempt ${i} — step-up action: ${data.step_up_audit?.action}`, data);
+        }
+    }
+
+    async function liveDemoImpossibleTravel() {
+        const out = document.getElementById('live-demo-output');
+        if (out) { out.textContent = ''; out.dataset.started = '0'; }
+        const accountId = 'demo-acct-' + Date.now();
+        const d1 = await _liveDemoPost('/api/scout/login-event', {
+            account_id: accountId, lat: 19.0760, lon: 72.8777, region: 'Mumbai, India'
+        });
+        if (!d1) return;
+        _liveDemoLog('Login 1 — Mumbai, India', d1);
+        const d2 = await _liveDemoPost('/api/scout/login-event', {
+            account_id: accountId, lat: 6.5244, lon: 3.3792, region: 'Lagos, Nigeria'
+        });
+        if (!d2) return;
+        _liveDemoLog('Login 2 — Lagos, Nigeria (moments later)', d2);
+    }
+
+    window.liveDemoCardTesting = liveDemoCardTesting;
+    window.liveDemoBotSpeed = liveDemoBotSpeed;
+    window.liveDemoOtpFail = liveDemoOtpFail;
+    window.liveDemoImpossibleTravel = liveDemoImpossibleTravel;
+
     window.runVerificationMatrix = function() {
         if (state && state.documents && (state.documents.invoice || state.documents.packing || state.documents.bol || state.documents.lc)) {
             runPipeline();

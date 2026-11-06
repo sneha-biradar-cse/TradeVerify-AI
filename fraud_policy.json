@@ -1,0 +1,194 @@
+{
+  "version": 1,
+  "description": "Configurable payment fraud policy for TradeVerify AI. Values are starting points for testing, not FedEx policy.",
+  "carding": {
+    "same_payment_method_failures": {
+      "count": 4,
+      "window_seconds": 300
+    },
+    "distinct_payment_methods": {
+      "count": 4,
+      "window_seconds": 120,
+      "minimum_failures_for_block": 2
+    },
+    "attempt_burst_with_failures": {
+      "count": 5,
+      "window_seconds": 30
+    },
+    "account_failures": {
+      "count": 4,
+      "window_seconds": 600
+    },
+    "block_duration_seconds": 900
+  },
+  "bot": {
+    "minimum_human_gap_ms": 800,
+    "strike_count": 2,
+    "strike_window_seconds": 30,
+    "attempt_burst_count": 5,
+    "attempt_burst_window_seconds": 30,
+    "rate_limit_count": 4,
+    "rate_limit_window_seconds": 4
+  },
+  "risk_scoring": {
+    "signals": {
+      "payment_failure": 10,
+      "two_failures_in_window": 20,
+      "same_payment_method_failure_threshold": 35,
+      "distinct_payment_methods_threshold": 40,
+      "failed_attempt_burst": 30,
+      "account_failure_threshold": 40,
+      "fast_payment_gap": 25,
+      "bot_strike_threshold": 40,
+      "new_ip": 10,
+      "active_fraud_block": 30
+    },
+    "decisions": {
+      "allow_below": 30,
+      "step_up_below": 60,
+      "review_below": 80,
+      "block_at_or_above": 80
+    },
+    "conditions": {
+      "repeated_failure_count": 2
+    }
+  },
+  "limits": {
+    "max_policy_file_size_bytes": 1048576
+  },
+  "state": {
+    "memory_key_max_idle_seconds": 86400,
+    "memory_sweep_interval_seconds": 600,
+    "idempotency_ttl_seconds": 86400
+  },
+  "authentication": {
+    "otp_failure_window_seconds": 600,
+    "otp_alert_threshold": 3,
+    "impossible_travel_speed_kmh": 900.0,
+    "impossible_travel_min_distance_km": 100.0,
+    "adaptive_step_up": {
+      "otp_alert_score": 35,
+      "otp_warn_score": 15,
+      "geo_alert_score": 40,
+      "carding_score": 60,
+      "bot_red_flag_score": 50,
+      "bot_suspect_score": 20,
+      "block_at": 70,
+      "step_up_at": 30
+    }
+  },
+  "payment_simulation": {
+    "default_outcome": "authorized",
+    "allow_test_outcome": true,
+    "allowed_test_outcomes": [
+      "authorized",
+      "declined"
+    ]
+  },
+  "escalation": {
+    "enabled": true,
+    "history_window_seconds": 86400,
+    "repeat_lock_durations_seconds": [
+      3600,
+      86400
+    ],
+    "manual_review_level": 3,
+    "self_unlock_max_level": 1,
+    "unlock_otp_ttl_seconds": 300,
+    "unlock_otp_max_attempts": 3,
+    "unlock_otp_resend_seconds": 30
+  },
+  "captcha": {
+    "max_passes_per_hour": 2,
+    "verify_timeout_seconds": 5
+  },
+  "hardening": {
+    "form_fill": {
+      "enabled": true,
+      "min_fill_ms": 1500,
+      "require_form_open": true
+    },
+    "rhythm": {
+      "enabled": true,
+      "min_gaps": 4,
+      "max_mean_gap_seconds": 15,
+      "max_variation": 0.08
+    }
+  },
+  "rate_limits": {
+    "enabled": true,
+    "rules": {
+      "/api/auth/login": {
+        "count": 10,
+        "window_seconds": 60
+      },
+      "/api/auth/verify-otp": {
+        "count": 10,
+        "window_seconds": 60
+      },
+      "/api/auth/register": {
+        "count": 10,
+        "window_seconds": 300
+      },
+      "/api/account/unlock-request": {
+        "count": 6,
+        "window_seconds": 300
+      },
+      "/api/account/unlock-verify": {
+        "count": 10,
+        "window_seconds": 300
+      },
+      "/api/payments/captcha/verify": {
+        "count": 15,
+        "window_seconds": 300
+      },
+      "/api/admin/": {
+        "count": 40,
+        "window_seconds": 60
+      },
+      "/api/auth/resend-otp": {
+        "count": 6,
+        "window_seconds": 300
+      },
+      "/api/admin/test-message": {
+        "count": 5,
+        "window_seconds": 300
+      }
+    }
+  },
+  "alerts": {
+    "min_seconds_between_alerts_per_account": 60,
+    "max_alerts_per_minute": 20
+  },
+  "extra_signals": {
+    "enabled": true,
+    "device": {
+      "cards": {
+        "count": 5,
+        "window_seconds": 600,
+        "points": 35
+      },
+      "accounts": {
+        "count": 3,
+        "window_seconds": 3600,
+        "points": 40
+      }
+    },
+    "card_family": {
+      "bin": {
+        "count": 4,
+        "window_seconds": 600,
+        "points": 30
+      },
+      "weak": {
+        "count": 6,
+        "window_seconds": 600,
+        "points": 15
+      }
+    },
+    "checks": {
+      "cvc_fail_points": 25,
+      "postcode_fail_points": 25
+    }
+  }
+}

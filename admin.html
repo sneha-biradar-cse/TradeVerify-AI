@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradeVerify AI — Fraud Engine Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=3.3">
+<style>
+  body.admin-body {
+    min-height: 100vh; background: radial-gradient(circle at 20% 20%, #0f172a, #020617 70%);
+    font-family: 'Inter', sans-serif; padding: 40px 20px;
+  }
+  .admin-wrap { max-width: 760px; margin: 0 auto; }
+  .back-link { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 18px; padding: 8px 14px; border: 1px solid #334155; border-radius: 8px; color: #94a3b8; font-size: 13px; font-weight: 700; text-decoration: none; }
+  .back-link:hover { border-color: #38bdf8; color: #f1f5f9; }
+  .admin-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 24px; font-weight: 800; color: #f1f5f9; margin: 0 0 4px; }
+  .admin-sub { font-size: 13px; color: #64748b; margin: 0 0 24px; }
+  .admin-card { background: #0f172acc; border: 1px solid #1e293b; border-radius: 14px; padding: 24px; margin-bottom: 20px; }
+  .admin-field input {
+    width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #334155;
+    background: #1e293b; color: #f1f5f9; font-size: 14px; box-sizing: border-box; margin-bottom: 10px;
+  }
+  .admin-btn {
+    padding: 10px 16px; border: none; border-radius: 8px; font-weight: 700;
+    font-size: 13px; cursor: pointer; background: #38bdf8; color: #0f172a;
+  }
+  .admin-btn.danger { background: #f87171; }
+  .admin-btn.ghost { background: transparent; border: 1px solid #334155; color: #94a3b8; }
+  .admin-btn:disabled { opacity: .5; cursor: not-allowed; }
+  .block-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 12px 14px; border-radius: 8px; background: #1e293b; margin-bottom: 8px;
+  }
+  .block-key { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #f1f5f9; word-break: break-all; }
+  .block-ttl { font-size: 11px; color: #64748b; white-space: nowrap; }
+  .block-row.bot { border-left: 4px solid #ef4444; background: #2a1215; }
+  .block-row.carding { border-left: 4px solid #f59e0b; }
+  .block-main { flex: 1; min-width: 0; }
+  .badge { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .6px; padding: 3px 8px; border-radius: 999px; margin-bottom: 6px; }
+  .badge.bot { background: #7f1d1d; color: #fecaca; }
+  .badge.carding { background: #78350f; color: #fde68a; }
+  .badge.other { background: #334155; color: #cbd5e1; }
+  .block-account { font-size: 14px; font-weight: 700; color: #f1f5f9; word-break: break-all; }
+  .block-reason { font-size: 12px; color: #cbd5e1; margin-top: 3px; }
+  .block-meta { font-size: 11px; color: #64748b; margin-top: 4px; }
+  .live-note { font-size: 11px; color: #64748b; margin-top: 10px; }
+  .empty-state { text-align: center; color: #475569; font-size: 13px; padding: 24px; }
+  .admin-msg { font-size: 12px; margin-top: 10px; padding: 8px 10px; border-radius: 6px; display: none; }
+  .admin-msg.ok { background: #052e16; color: #86efac; display: block; }
+  .admin-msg.error { background: #450a0a; color: #fca5a5; display: block; }
+</style>
+</head>
+<body class="admin-body">
+<div class="admin-wrap">
+  <a class="back-link" href="index.html">&larr; Back to Dashboard</a>
+  <h1 class="admin-title">🛡️ Fraud Engine Admin</h1>
+  <p class="admin-sub">See which accounts the fraud engine has blocked (bot attacks and card testing) and unblock them. Updates automatically every 3 seconds.</p>
+
+  <div class="admin-card" id="auth-card">
+    <div class="admin-field">
+      <input type="text" id="admin-name" placeholder="Your name (recorded in the audit log)" autocomplete="off" style="margin-bottom:8px">
+      <input type="password" id="admin-password" placeholder="Admin password (ADMIN_PASSWORD)">
+    </div>
+    <button class="admin-btn" onclick="loadBlocks()">Unlock Panel</button>
+    <div id="auth-msg" class="admin-msg"></div>
+  </div>
+
+  <div class="admin-card" id="blocks-card" style="display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <strong style="color:#f1f5f9;font-size:14px;">Active Blocks (<span id="block-count">0</span>)</strong>
+      <div>
+        <button class="admin-btn ghost" onclick="loadBlocks()">Refresh</button>
+        <button class="admin-btn danger" onclick="clearAllBlocks(this)">Clear All</button>
+      </div>
+    </div>
+    <div id="blocks-list"></div>
+    <div class="live-note">Live view: a new block appears here within a few seconds. "Unblock" restores the account and clears the session block too.</div>
+    <div id="action-msg" class="admin-msg"></div>
+  </div>
+
+  <div class="admin-card" id="stats-card" style="display:none;">
+    <strong style="color:#f1f5f9;font-size:14px;">Last 24 hours</strong>
+    <div id="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:10px"></div>
+    <div id="stats-note" style="margin-top:8px;font-size:11px;color:#64748b"></div>
+  </div>
+
+  <div class="admin-card" id="status-card" style="display:none;">
+    <strong style="color:#f1f5f9;font-size:14px;">System status</strong>
+    <div style="font-size:11px;color:#64748b;margin-top:2px">What is switched on right now (secrets are never shown).</div>
+    <div id="status-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px;margin-top:10px;font-size:12px"></div>
+    <div style="margin-top:14px;font-size:12px;color:#94a3b8">Send a test login-code message to check delivery:</div>
+    <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+      <select id="test-channel" style="height:36px;border-radius:8px;background:#1e293b;color:#e2e8f0;border:1px solid #334155;padding:0 8px"><option value="email">Email</option><option value="sms">SMS</option><option value="whatsapp">WhatsApp</option></select>
+      <input type="text" id="test-to" placeholder="you@gmail.com or +919876543210" autocomplete="off" style="flex:1;min-width:200px">
+      <button class="btn-refresh" id="test-send-btn" onclick="sendTestMessage()" type="button">Send test</button>
+    </div>
+    <div id="test-result" style="margin-top:6px;font-size:12px;color:#94a3b8"></div>
+  </div>
+
+  <div class="admin-card" id="glossary-card">
+    <details>
+      <summary style="cursor:pointer;color:#f1f5f9;font-size:14px;font-weight:700">What do these terms mean?</summary>
+      <div style="margin-top:10px;font-size:12px;line-height:1.7;color:#94a3b8">
+        <p style="margin:0 0 8px"><b style="color:#e2e8f0">Ref (reference ID)</b> &ndash; a short code such as TV-D4FDA5 given to every block. The customer sees the same code on their screen, so support can find the case instantly.</p>
+        <p style="margin:0 0 8px"><b style="color:#e2e8f0">Card testing</b> &ndash; several failed card payments in a row. Criminals try stolen card numbers on a small payment to see which ones work. <b style="color:#e2e8f0">Bot attack</b> &ndash; payments sent faster than a human can type, which means a script.</p>
+        <p style="margin:0 0 8px"><b style="color:#e2e8f0">Lock level</b> &ndash; how many times this account was blocked in 24 hours. Level 1 lasts 15 minutes and the customer may unblock themselves with an emailed code. Level 2 (a repeat) lasts 60 minutes and needs support or waiting. Level 3 lasts 24 hours and is marked MANUAL REVIEW.</p>
+        <p style="margin:0 0 8px"><b style="color:#e2e8f0">Auto-unblocks in</b> &ndash; time left before the block lifts by itself. <b style="color:#e2e8f0">Blocked at</b> &ndash; when it started.</p>
+        <p style="margin:0 0 8px"><b style="color:#e2e8f0">Blocked: the account / this card / this browser session</b> &ndash; what was frozen. One incident freezes all of them together, so they appear as one row and one Unblock clears them all.</p>
+        <p style="margin:0 0 8px"><b style="color:#e2e8f0">Unblock / Clear All</b> &ndash; lifts the block now instead of waiting. Use it for a genuine customer caught by mistake.</p>
+        <p style="margin:0"><b style="color:#e2e8f0">Admin action history</b> &ndash; a permanent list of every unblock (by an admin or by the customer themselves), kept after the server restarts.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="admin-card" id="audit-card" style="display:none;">
+    <strong style="color:#f1f5f9;font-size:14px;">Admin action history</strong>
+    <div style="font-size:11px;color:#64748b;margin-top:2px">Every account, kept across restarts. Type an account or reference to narrow it down.</div>
+    <input type="text" id="audit-filter" placeholder="Filter: e.g. exporter:yyyy or TV-08E1E2" autocomplete="off" style="margin-top:8px;width:100%;box-sizing:border-box">
+    <div id="audit-list" style="margin-top:10px;font-size:12px;color:#94a3b8"></div>
+  </div>
+</div>
+
+<script>
+document.getElementById('admin-password').addEventListener('keydown', e => { if (e.key === 'Enter') loadBlocks(); });
+function _adminHeaders() {
+  return {
+    'X-Admin-Password': document.getElementById('admin-password').value,
+    'X-Admin-Name': document.getElementById('admin-name').value.trim()
+  };
+}
+
+function _showMsg(id, text, kind) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'admin-msg ' + kind;
+}
+
+let _lastBlocks = [];
+
+async function loadBlocks() {
+  const pw = document.getElementById('admin-password').value;
+  if (!pw) { _showMsg('auth-msg', 'Enter the admin password.', 'error'); return; }
+
+  try {
+    const res = await fetch('/api/admin/blocks', { headers: _adminHeaders() });
+    const data = await res.json();
+
+    if (!data.success) {
+      _showMsg('auth-msg', data.error || 'Could not load blocks.', 'error');
+      document.getElementById('blocks-card').style.display = 'none';
+      return;
+    }
+
+    document.getElementById('auth-msg').className = 'admin-msg';
+    document.getElementById('blocks-card').style.display = 'block';
+    _lastBlocks = data.blocks;
+    renderBlocks(data.blocks);
+    loadAudit();
+    loadStats();
+    loadStatus();
+    if (!window._blocksTimer) window._blocksTimer = setInterval(loadBlocks, 3000);
+  } catch (err) {
+    _showMsg('auth-msg', 'Network error: ' + err, 'error');
+  }
+}
+
+function _esc(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+function _fmtTime(epochSec) {
+  if (!epochSec) return '';
+  const d = new Date(epochSec * 1000);
+  return isNaN(d) ? '' : d.toLocaleTimeString();
+}
+
+function _fmtRemaining(sec) {
+  sec = Math.max(0, Math.round(sec));
+  return sec >= 60 ? Math.ceil(sec / 60) + ' min' : sec + ' s';
+}
+
+// One incident (one reference ID) freezes several things: the account, the card, the browser session.
+// Show it ONCE. The Unblock button clears all of them together.
+function _groupBlocks(blocks) {
+  const groups = new Map();
+  for (const b of blocks) {
+    const ref = (b.meta || {}).reference || '';
+    const gid = ref || ('key:' + b.key);
+    if (!groups.has(gid)) groups.set(gid, { ref, items: [] });
+    groups.get(gid).items.push(b);
+  }
+  return [...groups.values()].map(g => ({
+    ref: g.ref, items: g.items,
+    main: g.items.find(x => x.key.startsWith('account:')) || g.items[0],
+    seconds: Math.max(...g.items.map(x => x.seconds_remaining || 0))
+  }));
+}
+
+function _affects(items) {
+  const names = [];
+  for (const x of items) {
+    if (x.key.startsWith('account:')) names.push('the account');
+    else if (x.key.startsWith('card:')) names.push('this card');
+    else if (x.key.startsWith('session:')) names.push('this browser session');
+    else names.push(x.key);
+  }
+  return [...new Set(names)].join(', ');
+}
+
+function renderBlocks(blocks) {
+  const shown = _groupBlocks(blocks);
+  window._shownGroups = shown;
+  document.getElementById('block-count').textContent = shown.length;
+  const list = document.getElementById('blocks-list');
+  if (shown.length === 0) {
+    list.innerHTML = '<div class="empty-state">No blocked accounts right now.</div>';
+    return;
+  }
+  list.innerHTML = shown.map(g => {
+    const b = g.main, m = b.meta || {};
+    const kind = m.type === 'bot' ? 'bot' : (m.type === 'carding' ? 'carding' : 'other');
+    const label = kind === 'bot' ? 'BOT ATTACK SUSPECTED' : (kind === 'carding' ? 'CARD TESTING' : 'FRAUD BLOCK');
+    const who = m.account_id || b.key;
+    const reason = m.reason || 'Blocked by the fraud engine.';
+    const when = _fmtTime(m.blocked_at);
+    return `
+    <div class="block-row ${kind}">
+      <div class="block-main">
+        <span class="badge ${kind}">${label}</span>
+        <div class="block-account">${_esc(who)}</div>
+        <div class="block-reason">${_esc(reason)}</div>
+        <div class="block-meta">${g.ref ? '<b style="color:#e2e8f0">Ref ' + _esc(g.ref) + '</b> \u2022 ' : ''}${m.lock_level ? 'lock level ' + _esc(m.lock_level) + (m.needs_review ? ' <b style="color:#fca5a5">(MANUAL REVIEW)</b>' : '') + ' \u2022 ' : ''}${when ? 'blocked at ' + _esc(when) + ' \u2022 ' : ''}auto-unblocks in ${_fmtRemaining(g.seconds)}</div>
+        <div class="block-meta">Blocked: ${_esc(_affects(g.items))}</div>
+      </div>
+      <button class="admin-btn danger" data-ref="${_esc(g.ref)}" data-key="${_esc(b.key)}" onclick="unblockGroup(this.dataset.ref, this.dataset.key)">Unblock</button>
+    </div>`;
+  }).join('');
+}
+
+async function loadStatus() {
+  try {
+    const res = await fetch('/api/admin/system-status', { headers: _adminHeaders() });
+    const d = await res.json();
+    if (!d.success) return;
+    document.getElementById('status-card').style.display = 'block';
+    const row = (ok, label, detail) => `<div style="background:#0f172a;border:1px solid #1e293b;border-radius:8px;padding:8px 10px"><span style="color:${ok === true ? '#4ade80' : ok === false ? '#f87171' : '#fbbf24'};font-weight:800">${ok === true ? '\u2713' : ok === false ? '\u2717' : '!'}</span> <b style="color:#e2e8f0">${_esc(label)}</b><div style="color:#94a3b8;margin-top:2px">${_esc(detail)}</div></div>`;
+    const ch = d.login_code_channels, any = ch.email || ch.sms || ch.whatsapp;
+    document.getElementById('status-grid').innerHTML = [
+      row(d.mode === 'production' ? true : null, 'Mode', d.mode + ' / payments: ' + d.payment_provider),
+      row(any, 'Login codes delivered', any ? ['email', 'sms', 'whatsapp'].filter(c => ch[c]).join(', ') : 'none set up: codes appear only in the server window (development) or logins are refused (production)'),
+      row(d.alerts.webhook || d.alerts.email, 'Block alerts', d.alerts.webhook || d.alerts.email ? [d.alerts.webhook ? 'Slack-style webhook' : '', d.alerts.email ? 'email' : ''].filter(Boolean).join(' + ') : 'nobody is told when an account is blocked'),
+      row(d.captcha.enabled ? (d.captcha.test_keys ? null : true) : false, 'Human check (CAPTCHA)', d.captcha.enabled ? (d.captcha.test_keys ? 'on, but with Cloudflare TEST keys (always pass: no real protection)' : 'on') + (d.captcha.step_up_check ? '; used for extra-proof payments' : '') + (d.captcha.before_card_block ? '; before a card-testing block' : '') : 'off'),
+      row(d.extra_signals, 'Device / card-family / code checks', d.extra_signals ? 'on (add points to the risk score)' : 'off'),
+      row(d.rate_limits, 'Rate limits', d.rate_limits ? 'on (login, codes, unlock, admin)' : 'off'),
+      row(d.shared_counters === 'redis' ? true : null, 'Fraud counters', d.shared_counters),
+      row(d.dev_code_on_screen ? null : true, 'Code on screen', d.dev_code_on_screen ? 'ON (development only)' : 'off')
+    ].join('');
+  } catch (err) { /* keep the last view */ }
+}
+
+async function sendTestMessage() {
+  const out = document.getElementById('test-result'), btn = document.getElementById('test-send-btn');
+  btn.disabled = true; out.style.color = '#94a3b8'; out.textContent = 'Sending...';
+  try {
+    const res = await fetch('/api/admin/test-message', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, _adminHeaders()),
+      body: JSON.stringify({ channel: document.getElementById('test-channel').value, to: document.getElementById('test-to').value }) });
+    const d = await res.json();
+    out.style.color = d.success ? '#4ade80' : '#f87171';
+    out.textContent = d.success ? d.message : (d.error || 'Could not send.');
+  } catch (err) { out.style.color = '#f87171'; out.textContent = 'Could not reach the server.'; }
+  btn.disabled = false;
+}
+
+async function loadStats() {
+  try {
+    const res = await fetch('/api/admin/stats', { headers: _adminHeaders() });
+    const d = await res.json();
+    if (!d.success) return;
+    document.getElementById('stats-card').style.display = 'block';
+    const i = d.incidents || {};
+    const TIPS = {
+      'blocks': 'How many times the system froze an account in the last 24 hours. One incident counts once, however many things it froze.',
+      'bot attacks': 'Blocks caused by payments sent faster than a person can pay (a script or bot).',
+      'card testing': 'Blocks caused by several failed card payments in a row (someone trying stolen cards).',
+      'repeat locks': 'Blocks on an account that had already been blocked within 24 hours. These last longer (60 minutes, then 24 hours).',
+      'self-unlocks': 'Blocks the customer lifted themselves with a one-time code sent to their email.',
+      'admin unblocks': 'Blocks an administrator lifted by pressing Unblock.',
+      'lifted early': 'Share of blocks that were lifted before they expired (self-unlock or admin). A high number means real customers are being caught and the rule may be too strict.'
+    };
+    const tile = (n, label) => `<div title="${_esc(TIPS[label] || '')}" style="cursor:help;background:#0f172a;border:1px solid #1e293b;border-radius:10px;padding:10px"><div style="font-size:22px;font-weight:800;color:#f1f5f9">${_esc(n)}</div><div style="font-size:11px;color:#94a3b8">${_esc(label)}</div></div>`;
+    document.getElementById('stats-grid').innerHTML =
+      tile(i.total || 0, 'blocks') + tile(i.bot || 0, 'bot attacks') + tile(i.carding || 0, 'card testing') +
+      tile(i.repeat_locks || 0, 'repeat locks') + tile(d.self_unlocks, 'self-unlocks') + tile(d.admin_unblocks, 'admin unblocks') +
+      tile(d.unblocked_early_percent == null ? '-' : d.unblocked_early_percent + '%', 'lifted early');
+    document.getElementById('stats-note').textContent = 'A high "lifted early" share means real customers are being caught: loosen that rule. These counts cover this server run only (they reset on restart); the history below keeps everything.';
+  } catch (err) { /* keep the last view */ }
+}
+
+async function loadAudit() {
+  try {
+    const res = await fetch('/api/admin/audit', { headers: _adminHeaders() });
+    const data = await res.json();
+    if (!data.success) return;
+    document.getElementById('audit-card').style.display = 'block';
+    window._auditEntries = data.entries;
+    renderAudit();
+  } catch (err) { /* keep the last view */ }
+}
+
+function renderAudit() {
+  const q = (document.getElementById('audit-filter').value || '').trim().toLowerCase();
+  const rows = (window._auditEntries || []).filter(e => !q || (e.key + ' ' + (e.reference || '') + ' ' + (e.admin || '')).toLowerCase().includes(q));
+  const el = document.getElementById('audit-list');
+  {
+    el.innerHTML = rows.length === 0
+      ? (q ? 'No matching actions.' : 'No admin actions recorded yet.')
+      : rows.map(e => `<div style="padding:6px 0;border-top:1px solid #1e293b">${_esc(new Date(e.ts * 1000).toLocaleString())} \u2022 <b style="color:#e2e8f0">${_esc(e.admin)}</b> ${e.cleared ? 'unblocked' : 'tried to unblock (already expired)'} <code>${_esc(e.key)}</code>${e.reference ? ' \u2022 Ref ' + _esc(e.reference) : ''}</div>`).join('');
+  }
+}
+document.addEventListener('input', (e) => { if (e.target && e.target.id === 'audit-filter') renderAudit(); });
+
+async function unblockGroup(ref, key) {
+  try {
+    const res = await fetch('/api/admin/unblock', {
+      method: 'POST',
+      headers: { ..._adminHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(ref ? { reference: ref } : { key })
+    });
+    const data = await res.json();
+    if (data.success && data.cleared) {
+      _showMsg('action-msg', 'Unblocked' + (ref ? ' (' + ref + ')' : ': ' + key), 'ok');
+    } else {
+      _showMsg('action-msg', data.error || 'Could not clear that block (may have already expired).', 'error');
+    }
+    loadBlocks();
+    loadAudit();
+  } catch (err) {
+    _showMsg('action-msg', 'Network error: ' + err, 'error');
+  }
+}
+
+async function clearAllBlocks(btn) {
+  const groups = window._shownGroups || [];
+  if (groups.length === 0) return;
+  btn.disabled = true; btn.textContent = 'Clearing...';
+  for (const g of groups) {
+    await fetch('/api/admin/unblock', {
+      method: 'POST',
+      headers: { ..._adminHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(g.ref ? { reference: g.ref } : { key: g.main.key })
+    });
+  }
+  btn.disabled = false; btn.textContent = 'Clear All';
+  _showMsg('action-msg', 'All blocks cleared.', 'ok');
+  loadBlocks();
+  loadAudit();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradeVerify AI — Importer Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=2.2">
+<style>
+  body.login-body {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 20% 20%, #0f172a, #020617 70%);
+    font-family: 'Inter', sans-serif;
+  }
+  .login-card {
+    width: 100%; max-width: 400px; background: #0f172acc; border: 1px solid #1e293b;
+    border-radius: 16px; padding: 32px; box-shadow: 0 20px 60px rgba(0,0,0,.4);
+  }
+  .login-role-badge {
+    display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; padding: 4px 10px; border-radius: 999px;
+    background: #1e3a5f; color: #7dd3fc; margin-bottom: 14px;
+  }
+  .login-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 22px; font-weight: 800; color: #f1f5f9; margin: 0 0 4px; }
+  .login-sub { font-size: 13px; color: #64748b; margin: 0 0 22px; }
+  .login-field { margin-bottom: 14px; }
+  .login-field label { display:block; font-size: 12px; font-weight: 600; color: #94a3b8; margin-bottom: 6px; }
+  .login-field input {
+    width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #334155;
+    background: #1e293b; color: #f1f5f9; font-size: 14px; box-sizing: border-box;
+  }
+  .login-btn {
+    width: 100%; padding: 11px; border: none; border-radius: 8px; font-weight: 700;
+    font-size: 14px; cursor: pointer; background: #38bdf8; color: #0f172a; margin-top: 6px;
+  }
+  .login-btn:disabled { opacity: .6; cursor: not-allowed; }
+  .login-msg { font-size: 13px; margin-top: 14px; padding: 10px 12px; border-radius: 8px; display: none; }
+  .login-msg.error { background: #450a0a; color: #fca5a5; display: block; }
+  .login-msg.warn { background: #422006; color: #fcd34d; display: block; }
+  .login-msg.ok { background: #052e16; color: #86efac; display: block; }
+  .login-demo-note { font-size: 11px; color: #475569; margin-top: 18px; line-height: 1.5; }
+  #otp-step { display: none; }
+</style>
+</head>
+<body class="login-body">
+  <div class="login-card">
+    <span class="login-role-badge">Importer Portal</span>
+    <h1 class="login-title">Sign in</h1>
+    <p class="login-sub">Protected by adaptive MFA &amp; geo-velocity screening.</p>
+
+    <div id="password-step">
+      <div class="login-field">
+        <label>Username</label>
+        <input type="text" id="login-username" autocomplete="username" placeholder="importer_demo">
+      </div>
+      <div class="login-field">
+        <label>Password</label>
+        <input type="password" id="login-password" autocomplete="current-password" placeholder="ChangeMe123!">
+      </div>
+      <button class="login-btn" id="login-submit-btn" onclick="loginSubmitPassword()">Continue</button>
+    </div>
+
+    
+    <p style="text-align:center;margin-top:14px;">
+      <a href="javascript:void(0)" onclick="toggleSignup()" style="color:#38bdf8;font-size:12px;">
+        Don't have an account? Create one
+      </a>
+    </p>
+
+    <div id="signup-step" style="display:none;">
+      <hr style="border-color:#1e293b;margin:16px 0;">
+      <div class="login-field">
+        <label>Choose a username</label>
+        <input type="text" id="signup-username" placeholder="e.g. yourcompany_01">
+      </div>
+      <div class="login-field">
+        <label>Choose a password (min 8 characters)</label>
+        <input type="password" id="signup-password" placeholder="Your own password">
+      </div>
+      <div class="login-field">
+        <label>Email (your 6-digit login code can be sent here)</label>
+        <input type="email" id="signup-email" placeholder="you@example.com">
+      </div>
+      <div class="login-field">
+        <label>Mobile number (for SMS / WhatsApp codes) <span style="color:#64748b">optional</span></label>
+        <input type="tel" id="signup-phone" placeholder="+91 98765 43210" autocomplete="tel">
+      </div>
+      <button class="login-btn" id="signup-submit-btn" onclick="submitRegistration()">Create account</button>
+      <p style="text-align:center;margin-top:10px;">
+        <a href="javascript:void(0)" onclick="toggleSignup()" style="color:#64748b;font-size:12px;">Back to sign in</a>
+      </p>
+    </div>
+
+    <div id="otp-step">
+      <div class="login-field">
+        <label>Enter the 6-digit code sent to you</label>
+        <input type="text" id="login-otp" maxlength="6" placeholder="000000">
+      </div>
+      <button class="login-btn" id="otp-submit-btn" onclick="loginSubmitOtp()">Verify &amp; Sign in</button>
+      <p style="text-align:center;margin-top:12px;font-size:12px;color:#94a3b8;">
+        Didn&rsquo;t get it? <a href="javascript:void(0)" id="resend-link" onclick="resendOtp()" style="color:#38bdf8;">Resend code</a>
+        <span id="resend-timer"></span>
+      </p>
+    </div>
+
+    <div id="login-message" class="login-msg"></div>
+
+    <p style="text-align:center;margin-top:10px;"><a href="portal-select.html" style="color:#475569;font-size:11px;">&larr; Not the right portal? Switch</a></p>
+    <p class="login-demo-note" id="dev-hint" style="display:none;">
+      Demo account: <code>importer_demo</code> / <code>ChangeMe123!</code><br>
+      If email / SMS is set up (otp_settings.env) the code is sent there. If not, it is logged to the server
+      console (and shown here for local testing only).
+    </p>
+  </div>
+
+<script>
+const LOGIN_ROLE = "importer";
+fetch('/api/ui-config').then(r => r.json()).then(c => { const h = document.getElementById('dev-hint'); if (h && c.dev_hints) h.style.display = 'block'; }).catch(() => {});
+let _loginSessionId = null;
+
+function _showMsg(text, kind) {
+  const el = document.getElementById('login-message');
+  el.textContent = text;
+  el.className = 'login-msg ' + kind;
+}
+
+async function _geoFromIP() {
+  // Best-effort client-side geolocation via browser API; falls back to
+  // no coordinates (server simply skips the impossible-travel check for
+  // this login) if the user declines or it's unavailable. Swap this for
+  // server-side IP geolocation (ipapi/MaxMind) if you don't want to rely
+  // on the browser permission prompt.
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) { resolve({}); return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+      () => resolve({}),
+      { timeout: 2000 }
+    );
+  });
+}
+
+async function loginSubmitPassword() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!username || !password) { _showMsg('Enter your username and password.', 'error'); return; }
+
+  const btn = document.getElementById('login-submit-btn');
+  btn.disabled = true; btn.textContent = 'Checking...';
+
+  const geo = await _geoFromIP();
+
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password, role: LOGIN_ROLE, lat: geo.lat, lon: geo.lon, region: '' })
+    });
+    const data = await res.json();
+    btn.disabled = false; btn.textContent = 'Continue';
+
+    if (!data.success) {
+      _showMsg(data.error || 'Login failed.', 'error');
+      return;
+    }
+
+    if (data.geo_audit && data.geo_audit.status === 'ALERT') {
+      _showMsg('Unusual login location detected — extra verification required. ' + data.geo_audit.details, 'warn');
+    } else {
+      _showMsg(_deliveryText(data), 'ok');
+    }
+
+    _loginSessionId = data.session_id;
+    document.getElementById('password-step').style.display = 'none';
+    document.getElementById('otp-step').style.display = 'block';
+    _startResendTimer(data.resend_seconds || 30);
+    if (data.demo_otp_code) {
+      document.getElementById('login-otp').placeholder = data.demo_otp_code;
+      const _hint = document.getElementById('dev-hint'); if (_hint) _hint.style.display = 'block';
+    }
+  } catch (err) {
+    btn.disabled = false; btn.textContent = 'Continue';
+    _showMsg('Could not reach the server: ' + err, 'error');
+  }
+}
+
+function _deliveryText(data) {
+  const h = data.sent_to || {};
+  const parts = [];
+  if (h.email) parts.push('your email ' + h.email);
+  if (h.sms) parts.push('your mobile ' + h.sms + ' by SMS');
+  if (h.whatsapp) parts.push('WhatsApp on ' + h.whatsapp);
+  if (parts.length) {
+    return 'Password verified. We sent a 6-digit code to ' + parts.join(' and ') + '. Enter it below' + (h.email ? ' (check your spam folder if you do not see it).' : '.');
+  }
+  if (data.failed_channels && data.failed_channels.length) {
+    return 'Password verified. We could not send the code (' + data.failed_channels.join(', ') + '), so a TEST code is shown below.';
+  }
+  if (data.demo_otp_code) return 'Password verified. No email or SMS is set up, so a TEST code is shown in the box below.';
+  return 'Password verified. Enter the OTP code below.';
+}
+
+let _resendTimerId = null;
+function _startResendTimer(seconds) {
+  const link = document.getElementById('resend-link'), label = document.getElementById('resend-timer');
+  clearInterval(_resendTimerId);
+  let left = seconds;
+  const tick = () => {
+    if (left > 0) { link.style.pointerEvents = 'none'; link.style.opacity = '0.4'; label.textContent = '(available in ' + left + ' s)'; left--; }
+    else { link.style.pointerEvents = 'auto'; link.style.opacity = '1'; label.textContent = ''; clearInterval(_resendTimerId); }
+  };
+  tick(); _resendTimerId = setInterval(tick, 1000);
+}
+
+async function resendOtp() {
+  try {
+    const res = await fetch('/api/auth/resend-otp', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: _loginSessionId })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      _showMsg(data.error || 'Could not send a new code.', 'error');
+      if (data.retry_after_seconds) _startResendTimer(data.retry_after_seconds);
+      return;
+    }
+    _showMsg(_deliveryText(data).replace('Password verified. ', 'New code sent. ').replace('We sent a', 'We sent a new'), 'ok');
+    _startResendTimer(data.resend_seconds || 30);
+    if (data.demo_otp_code) document.getElementById('login-otp').placeholder = data.demo_otp_code;
+  } catch (err) { _showMsg('Could not reach the server: ' + err, 'error'); }
+}
+
+async function loginSubmitOtp() {
+  const otp_code = document.getElementById('login-otp').value.trim();
+  if (!otp_code) { _showMsg('Enter the OTP code.', 'error'); return; }
+
+  const btn = document.getElementById('otp-submit-btn');
+  btn.disabled = true; btn.textContent = 'Verifying...';
+
+  try {
+    const res = await fetch('/api/auth/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: _loginSessionId, otp_code })
+    });
+    const data = await res.json();
+    btn.disabled = false; btn.textContent = 'Verify & Sign in';
+
+    if (data.success) {
+      _showMsg('Signed in successfully.', 'ok');
+      localStorage.setItem('tv_session_token', data.token);
+      localStorage.setItem('tv_role', data.role);
+      localStorage.setItem('tv_username', data.username);
+      setTimeout(() => { window.location.href = 'index.html'; }, 900);
+      return;
+    }
+
+    if (data.blocked) {
+      _showMsg('Login blocked: ' + (data.error || 'elevated risk detected.'), 'error');
+    } else if (data.step_up_required) {
+      _showMsg('Correct code, but additional verification is required due to risk signals: ' +
+               (data.step_up_audit ? data.step_up_audit.details : ''), 'warn');
+    } else {
+      _showMsg(data.error || 'Incorrect OTP.', 'error');
+    }
+  } catch (err) {
+    btn.disabled = false; btn.textContent = 'Verify & Sign in';
+    _showMsg('Could not reach the server: ' + err, 'error');
+  }
+}
+
+function toggleSignup() {
+  const pwStep = document.getElementById('password-step');
+  const signupStep = document.getElementById('signup-step');
+  const showingSignup = signupStep.style.display === 'block';
+  signupStep.style.display = showingSignup ? 'none' : 'block';
+  pwStep.style.display = showingSignup ? 'block' : 'none';
+  document.getElementById('login-message').className = 'login-msg';
+}
+
+async function submitRegistration() {
+  const username = document.getElementById('signup-username').value.trim();
+  const password = document.getElementById('signup-password').value;
+  const email = document.getElementById('signup-email').value.trim();
+  const phone = document.getElementById('signup-phone').value.trim();
+  if (!username || !password) { _showMsg('Enter a username and password.', 'error'); return; }
+
+  const btn = document.getElementById('signup-submit-btn');
+  btn.disabled = true; btn.textContent = 'Creating...';
+
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password, role: LOGIN_ROLE, email, phone })
+    });
+    const data = await res.json();
+    btn.disabled = false; btn.textContent = 'Create account';
+
+    if (!data.success) { _showMsg(data.error || 'Could not create account.', 'error'); return; }
+
+    _showMsg('Account created! Signing you in...', 'ok');
+    document.getElementById('login-username').value = username;
+    document.getElementById('login-password').value = password;
+    toggleSignup();
+    setTimeout(loginSubmitPassword, 600);
+  } catch (err) {
+    btn.disabled = false; btn.textContent = 'Create account';
+    _showMsg('Could not reach the server: ' + err, 'error');
+  }
+}
+
+</script>
+</body>
+</html>

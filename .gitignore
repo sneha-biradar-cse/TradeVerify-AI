@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+otp_settings.env
+email_settings.env
+venv/
+.venv/
+__pycache__/
+*.pyc
+.cache/
+logs/
+scratch/

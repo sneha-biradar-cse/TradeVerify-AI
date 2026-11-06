@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeVerify AI — Enterprise Trade Document Verification Platform</title>
+    <meta name="description" content="TradeVerify AI by YellowSense Technologies — Enterprise AI-powered trade document verification, compliance validation, and risk assessment platform.">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link rel="stylesheet" href="styles.css?v=2.2">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     TOP NAVIGATION
+═══════════════════════════════════════════════════════ -->
+<header class="top-nav">
+    <div class="nav-inner">
+        <!-- Product & Company Branding -->
+        <div class="brand">
+            <div class="brand-logo">
+                <svg width="38" height="38" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="40" height="40" rx="10" fill="#F5B800"/>
+                    <path d="M20 7L10 11.5V19C10 25.5 14.3 31.4 20 33C25.7 31.4 30 25.5 30 19V11.5L20 7Z" fill="#1E40AF" opacity="0.18"/>
+                    <path d="M20 8L11 12.2V19C11 25.0 14.9 30.5 20 32C25.1 30.5 29 25.0 29 19V12.2L20 8Z" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M16 19.5L18.8 22.3L24.5 16.5" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="27" cy="11" r="2.5" fill="#FFFFFF"/>
+                </svg>
+            </div>
+            <div class="brand-text">
+                <div class="brand-row">
+                    <span class="brand-name">TradeVerify</span>
+                    <span class="brand-badge">AI</span>
+                </div>
+                <div class="company-sub">by YellowSense Technologies</div>
+            </div>
+        </div>
+
+        <!-- Workflow Stepper -->
+        <nav class="stepper-nav">
+            <div class="step-item active" id="nav-step-1">
+                <div class="step-circle">1</div>
+                <span class="step-text">Upload Documents</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step-item" id="nav-step-2">
+                <div class="step-circle">2</div>
+                <span class="step-text">AI Extraction</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step-item" id="nav-step-3">
+                <div class="step-circle">3</div>
+                <span class="step-text">Compliance Report</span>
+            </div>
+        </nav>
+
+        <!-- Status Indicator & Controls -->
+        <div class="nav-right">
+            <!-- Compact Scout Security Selector in Header -->
+            <div class="scout-pill-badge">
+              <span class="scout-dot green" id="scoutStatusDot"></span>
+              <span class="scout-label">Scout Security:</span>
+              <select id="scoutScenarioSelect" class="scout-pill-select" onchange="switchScoutScenario(this.value)">
+                <option value="CLEAN">Clean Session</option>
+                <option value="MFA_FAIL">MFA Fail (3/3)</option>
+                <option value="IMPOSSIBLE_TRAVEL">Geo Anomaly (Lagos)</option>
+                <option value="CARDING_ATTACK">Carding Declines (4x)</option>
+                <option value="ACCOUNT_TAKEOVER">Account Takeover</option>
+              </select>
+            </div>
+            <div class="status-indicator-box">
+                <div class="api-status-dot ok" id="api-status-indicator" title="System Active">
+                    <span class="status-pulse"></span>
+                </div>
+                <span class="api-status-label" id="api-status-label">AI Ready</span>
+            </div>
+            <button class="btn-ghost" id="btn-reset-all">
+                <i data-lucide="rotate-ccw"></i> Reset
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════
+     VIEW 1 — UPLOAD & VERIFY
+═══════════════════════════════════════════════════════ -->
+<main class="main-wrap">
+<section class="view-panel active" id="view-upload">
+    
+    <!-- Hero Section -->
+    <div class="hero">
+        <div class="hero-badge">
+            <span class="badge-dot"></span>
+            Powered by YellowSense Technologies
+        </div>
+        <h1 class="hero-title">AI-Powered Trade Document Verification Platform</h1>
+        <p class="hero-sub">Automatically extract, validate, and verify international trade documents in seconds using enterprise AI.</p>
+        
+        <!-- Metrics Cards -->
+        <div class="hero-stats">
+            <div class="hs-card">
+                <div class="hs-num">4</div>
+                <div class="hs-label">Documents Supported</div>
+            </div>
+            <div class="hs-card">
+                <div class="hs-num">24+</div>
+                <div class="hs-label">AI Extraction Fields</div>
+            </div>
+            <div class="hs-card">
+                <div class="hs-num">20+</div>
+                <div class="hs-label">Compliance Rules</div>
+            </div>
+            <div class="hs-card">
+                <div class="hs-num">15+</div>
+                <div class="hs-label">Cross Checks</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid Layout (1600px Max Content Width) -->
+    <div class="upload-layout">
+        
+        <!-- Left Column: Upload Cards & Call to Action -->
+        <div class="upload-cards-col">
+            <div class="section-label">
+                <i data-lucide="upload-cloud"></i>
+                Upload Shipment Document Package
+            </div>
+
+            <div class="cards-stack">
+                <!-- Commercial Invoice -->
+                <div class="doc-card" id="card-invoice">
+                    <div class="doc-card-header">
+                        <div class="doc-icon doc-icon-amber">
+                            <i data-lucide="file-text"></i>
+                        </div>
+                        <div class="doc-header-text">
+                            <div class="doc-card-title">Commercial Invoice</div>
+                            <div class="doc-card-sub">Extracts exporter, consignee, items, values & HS codes</div>
+                        </div>
+                        <span class="doc-badge badge-pending" id="badge-invoice">Pending</span>
+                    </div>
+                    <div class="dropzone" id="drop-invoice">
+                        <div class="drop-idle" id="drop-idle-invoice">
+                            <div class="drop-icon-wrap"><i data-lucide="upload"></i></div>
+                            <p class="drop-prompt">Drop file here or <label for="file-invoice" class="pick-link">browse</label></p>
+                            <span class="drop-formats">Supports PDF, PNG, JPG</span>
+                        </div>
+                        <div class="drop-loaded hidden" id="drop-loaded-invoice"></div>
+                        <input type="file" id="file-invoice" accept=".pdf,.png,.jpg,.jpeg" class="file-input-hidden">
+                    </div>
+                </div>
+
+                <!-- Packing List -->
+                <div class="doc-card" id="card-packing">
+                    <div class="doc-card-header">
+                        <div class="doc-icon doc-icon-blue">
+                            <i data-lucide="package"></i>
+                        </div>
+                        <div class="doc-header-text">
+                            <div class="doc-card-title">Packing List</div>
+                            <div class="doc-card-sub">Extracts weights, package counts, marks & dimensions</div>
+                        </div>
+                        <span class="doc-badge badge-pending" id="badge-packing">Pending</span>
+                    </div>
+                    <div class="dropzone" id="drop-packing">
+                        <div class="drop-idle" id="drop-idle-packing">
+                            <div class="drop-icon-wrap"><i data-lucide="upload"></i></div>
+                            <p class="drop-prompt">Drop file here or <label for="file-packing" class="pick-link">browse</label></p>
+                            <span class="drop-formats">Supports PDF, PNG, JPG</span>
+                        </div>
+                        <div class="drop-loaded hidden" id="drop-loaded-packing"></div>
+                        <input type="file" id="file-packing" accept=".pdf,.png,.jpg,.jpeg" class="file-input-hidden">
+                    </div>
+                </div>
+
+                <!-- Bill of Lading -->
+                <div class="doc-card" id="card-bol">
+                    <div class="doc-card-header">
+                        <div class="doc-icon doc-icon-navy">
+                            <i data-lucide="ship"></i>
+                        </div>
+                        <div class="doc-header-text">
+                            <div class="doc-card-title">Bill of Lading</div>
+                            <div class="doc-card-sub">Extracts B/L number, vessel, ports & container details</div>
+                        </div>
+                        <span class="doc-badge badge-pending" id="badge-bol">Pending</span>
+                    </div>
+                    <div class="dropzone" id="drop-bol">
+                        <div class="drop-idle" id="drop-idle-bol">
+                            <div class="drop-icon-wrap"><i data-lucide="upload"></i></div>
+                            <p class="drop-prompt">Drop file here or <label for="file-bol" class="pick-link">browse</label></p>
+                            <span class="drop-formats">Supports PDF, PNG, JPG</span>
+                        </div>
+                        <div class="drop-loaded hidden" id="drop-loaded-bol"></div>
+                        <input type="file" id="file-bol" accept=".pdf,.png,.jpg,.jpeg" class="file-input-hidden">
+                    </div>
+                </div>
+
+                <!-- Letter of Credit (LC) -->
+                <div class="doc-card" id="card-lc">
+                    <div class="doc-card-header">
+                        <div class="doc-icon doc-icon-purple">
+                            <i data-lucide="landmark"></i>
+                        </div>
+                        <div class="doc-header-text">
+                            <div class="doc-card-title">Letter of Credit (LC)</div>
+                            <div class="doc-card-sub">Extracts LC number, issuing bank, applicant, beneficiary & expiry</div>
+                        </div>
+                        <span class="doc-badge badge-pending" id="badge-lc">Pending</span>
+                    </div>
+                    <div class="dropzone" id="drop-lc">
+                        <div class="drop-idle" id="drop-idle-lc">
+                            <div class="drop-icon-wrap"><i data-lucide="upload"></i></div>
+                            <p class="drop-prompt">Drop file here or <label for="file-lc" class="pick-link">browse</label></p>
+                            <span class="drop-formats">Supports PDF, PNG, JPG</span>
+                        </div>
+                        <div class="drop-loaded hidden" id="drop-loaded-lc"></div>
+                        <input type="file" id="file-lc" accept=".pdf,.png,.jpg,.jpeg" class="file-input-hidden">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analyze Button — sits directly below all 4 document cards -->
+            <button class="btn-primary btn-analyze" id="btn-analyze" disabled>
+                <i data-lucide="sparkles" class="btn-spark-icon"></i>
+                <span>Analyze Shipment</span>
+            </button>
+            <p class="analyze-hint" id="analyze-hint">Upload at least one trade document to initiate enterprise AI verification</p>
+        </div>
+
+        <!-- Right Column: Enterprise Feature Cards & Document Roadmap -->
+        <div class="sidebar-col">
+            <!-- Feature Cards Section -->
+            <div class="sidebar-section-title">
+                <i data-lucide="shield-check"></i> Verification Capabilities
+            </div>
+            
+            <div class="feature-cards-grid">
+                <div class="feature-card">
+                    <div class="fc-icon"><i data-lucide="file-text"></i></div>
+                    <div class="fc-content">
+                        <div class="fc-title">AI Document Extraction</div>
+                        <div class="fc-desc">Extracts structured trade data from uploaded documents with confidence scoring.</div>
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="fc-icon"><i data-lucide="badge-check"></i></div>
+                    <div class="fc-content">
+                        <div class="fc-title">Cross-Document Verification</div>
+                        <div class="fc-desc">Matches values across Commercial Invoice, Packing List and Bill of Lading.</div>
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="fc-icon"><i data-lucide="shield-check"></i></div>
+                    <div class="fc-content">
+                        <div class="fc-title">Compliance Validation</div>
+                        <div class="fc-desc">Checks mandatory trade compliance rules, Incoterms, and HS format rules.</div>
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="fc-icon"><i data-lucide="triangle-alert"></i></div>
+                    <div class="fc-content">
+                        <div class="fc-title">Risk Assessment</div>
+                        <div class="fc-desc">Detects inconsistencies, missing fields, and severe trade compliance issues.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Supported Document Types Section -->
+            <div class="sidebar-card doc-roadmap-card">
+                <div class="roadmap-header">
+                    <i data-lucide="files"></i>
+                    <span>Document Support Matrix</span>
+                </div>
+
+                <!-- Supported Today -->
+                <div class="roadmap-group">
+                    <div class="rg-title">Supported Today</div>
+                    <ul class="rg-list supported-list">
+                        <li><span class="check-icon">✓</span> Commercial Invoice</li>
+                        <li><span class="check-icon">✓</span> Packing List</li>
+                        <li><span class="check-icon">✓</span> Bill of Lading</li>
+                        <li><span class="check-icon">✓</span> Letter of Credit (LC)</li>
+                    </ul>
+                </div>
+
+                <div class="roadmap-divider"></div>
+
+                <!-- Future Support -->
+                <div class="roadmap-group">
+                    <div class="rg-title future-title">Future Support</div>
+                    <ul class="rg-list future-list">
+                        <li>• Certificate of Origin</li>
+                        <li>• Shipping Bill</li>
+                        <li>• Air Waybill (AWB)</li>
+                        <li>• Insurance Certificate</li>
+                        <li>• Purchase Order</li>
+                        <li>• Proforma Invoice</li>
+                        <li>• Export Declaration</li>
+                        <li>• Inspection Certificate</li>
+                        <li>• Certificate of Analysis</li>
+                        <li>• Dangerous Goods Declaration</li>
+                        <li>• Fumigation Certificate</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     LOADING MODAL
+═══════════════════════════════════════════════════════ -->
+<div class="loading-modal" id="loading-modal">
+    <div class="loading-card">
+        <div class="loading-header">
+            <div class="loading-spinner"></div>
+            <div>
+                <div class="loading-title">AI Processing Underway</div>
+                <div class="loading-sub" id="loading-status-text">Initializing verification pipeline...</div>
+            </div>
+        </div>
+
+        <div class="loading-progress-track">
+            <div class="loading-progress-fill" id="loading-progress"></div>
+        </div>
+
+        <div class="loading-steps">
+            <div class="ls-step" id="ls-1"><div class="ls-dot"></div><span>Uploading Documents</span></div>
+            <div class="ls-step" id="ls-2"><div class="ls-dot"></div><span>Running Enterprise AI Verification</span></div>
+            <div class="ls-step" id="ls-3"><div class="ls-dot"></div><span>Extracting Structured Data</span></div>
+            <div class="ls-step" id="ls-4"><div class="ls-dot"></div><span>Running Cross-Document Verification Engine</span></div>
+            <div class="ls-step" id="ls-5"><div class="ls-dot"></div><span>Running Compliance Rule Engine</span></div>
+            <div class="ls-step" id="ls-6"><div class="ls-dot"></div><span>Generating Risk Assessment & Recommendations</span></div>
+            <div class="ls-step" id="ls-7"><div class="ls-dot"></div><span>Preparing Executive Dashboard</span></div>
+        </div>
+
+        <div class="loading-note">
+            <i data-lucide="clock"></i>
+            Enterprise analysis takes approximately 15–30 seconds
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     VIEW 2 — EXECUTIVE DASHBOARD (RESULTS)
+═══════════════════════════════════════════════════════ -->
+<section class="view-panel" id="view-dashboard">
+
+    <!-- Status Banner -->
+    <div class="status-banner" id="status-banner">
+        <div class="sb-left">
+            <div class="sb-icon" id="sb-icon"></div>
+            <div>
+                <div class="sb-label">Shipment Status</div>
+                <div class="sb-status" id="sb-status-text">—</div>
+            </div>
+        </div>
+        <div class="sb-right">
+            <div class="sb-meta" id="sb-meta-text"></div>
+            <div class="sb-actions">
+                <button class="btn-ghost-dark" id="btn-back-upload">
+                    <i data-lucide="arrow-left"></i> Upload More
+                </button>
+                <button class="btn-exporter-action" id="btn-contact-exporter">
+                    <i data-lucide="mail-question"></i> Contact Exporter
+                </button>
+                <button class="btn-export-pdf" id="btn-export-pdf">
+                    <i data-lucide="download"></i> Export PDF
+                </button>
+                <button class="btn-export-json" id="btn-export-json">
+                    <i data-lucide="code"></i> Export JSON
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Executive Stat Cards (7-Column Unified KPI Grid) -->
+    <div class="kpi-grid-container stat-row">
+        <div class="kpi-card stat-card">
+            <div class="kpi-icon stat-icon stat-blue"><i data-lucide="file-text"></i></div>
+            <div class="kpi-value stat-val" id="m-docs">0</div>
+            <div class="kpi-label stat-label">Documents Processed</div>
+        </div>
+        <div class="kpi-card stat-card">
+            <div class="kpi-icon stat-icon stat-yellow"><i data-lucide="search"></i></div>
+            <div class="kpi-value stat-val" id="m-fields">0</div>
+            <div class="kpi-label stat-label">Fields Extracted</div>
+        </div>
+        <div class="kpi-card stat-card">
+            <div class="kpi-icon stat-icon stat-teal"><i data-lucide="badge-check"></i></div>
+            <div class="kpi-value stat-val" id="m-verif">0</div>
+            <div class="kpi-label stat-label">Verification Checks</div>
+        </div>
+        <div class="kpi-card stat-card">
+            <div class="kpi-icon stat-icon stat-purple"><i data-lucide="shield-check"></i></div>
+            <div class="kpi-value stat-val" id="m-compliance">0</div>
+            <div class="kpi-label stat-label">Compliance Checks</div>
+        </div>
+        <div class="kpi-card stat-card">
+            <div class="kpi-icon stat-icon stat-red"><i data-lucide="triangle-alert"></i></div>
+            <div class="kpi-value stat-val" id="m-alerts">0</div>
+            <div class="kpi-label stat-label">Risk Alerts</div>
+        </div>
+        <div class="kpi-card stat-card">
+            <div class="kpi-icon stat-icon stat-purple"><i data-lucide="fingerprint"></i></div>
+            <div class="kpi-value stat-val" id="m-auth-verdict" style="font-size: 14px; font-weight: 700; text-transform: uppercase;">—</div>
+            <div class="kpi-label stat-label">Authenticity Verdict</div>
+        </div>
+        <div class="kpi-card stat-card">
+            <div class="kpi-icon stat-icon stat-teal"><i data-lucide="shield"></i></div>
+            <div class="kpi-value stat-val" id="m-scout-badge" style="font-size: 13px; font-weight: 700; text-transform: uppercase;">SECURE</div>
+            <div class="kpi-label stat-label">Scout Account Security</div>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="tab-bar">
+        <button class="tab-btn active" data-tab="tab-extraction">
+            <i data-lucide="file-text"></i> Document Extraction
+        </button>
+        <button class="tab-btn" data-tab="tab-verification">
+            <i data-lucide="check-circle-2"></i> Verification Matrix
+        </button>
+        <button class="tab-btn" data-tab="tab-quota">Commodity Allowance</button>
+        <button class="tab-btn" data-tab="tab-authenticity">
+            <i data-lucide="fingerprint"></i> Authenticity & Forensics
+        </button>
+        <button class="tab-btn" data-tab="tab-compliance">
+            <i data-lucide="shield-check"></i> Compliance Rules
+        </button>
+        <button class="tab-btn" data-tab="tab-risk">
+            <i data-lucide="alert-triangle"></i> Risk Analysis
+        </button>
+        <button class="tab-btn" data-tab="tab-recommendations">
+            <i data-lucide="lightbulb"></i> AI Recommendations
+        </button>
+        <button class="tab-btn" data-tab="tab-advisor">
+            <i data-lucide="globe"></i> Destination Trade Advisor
+        </button>
+    </div>
+
+    <!-- TAB: EXTRACTION -->
+    <div class="tab-content active" id="tab-extraction">
+        <div class="extraction-grid" id="extraction-grid"></div>
+    </div>
+
+    <!-- TAB: VERIFICATION -->
+    <div class="tab-content" id="tab-verification">
+        <div class="panel-card">
+            <div class="panel-header">
+                <div class="panel-title">Cross-Document Verification Matrix</div>
+                <div class="panel-summary" id="verif-summary"></div>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Commercial Invoice</th>
+                            <th>Packing List</th>
+                            <th>Bill of Lading</th>
+                            <th>Letter of Credit</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="verif-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB: COMMODITY ALLOWANCE -->
+    <div class="tab-content tab-pane" id="tab-quota">
+        <div class="panel-card">
+            <div class="panel-header" style="flex-wrap: wrap; gap: 14px; align-items: center;">
+                <div>
+                    <div class="panel-title" style="display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="scale"></i> Commodity Allowance
+                    </div>
+                    <div style="font-size: 13px; color: var(--color-slate-500); margin-top: 4px;">
+                        Statutory DGFT export quotas, UCP 600 financial drawing limits, WCO tariff alignment, and packaging parity reconciliation.
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-left: auto;">
+                    <div id="quota-overall-badge"></div>
+                    <button class="btn-primary" id="btn-quota-contact-exporter" onclick="openContactModal()" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; font-size: 13px;">
+                        <i data-lucide="mail"></i> Contact Exporter / Dispatch Notice
+                    </button>
+                </div>
+            </div>
+
+            <!-- 7 Core Indicators Barometer Grid -->
+            <div style="margin: 20px 0 10px 0;">
+                <div style="font-size: 12px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px;">
+                    Commodity Allowance Barometers (7 Core Indicators)
+                </div>
+                <div class="indicator-grid" id="quota-cards-grid">
+                    <!-- Rendered dynamically by app.js: renderQuotaTab() -->
+                </div>
+            </div>
+
+            <!-- Pre-clearance Decision Banner & Mitigation Summary -->
+            <div id="quota-decision-banner"></div>
+
+            <!-- Allowance Findings & Statutory Breach Ledger Table -->
+            <div style="margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div style="font-size: 13px; font-weight: 700; color: var(--text-1); text-transform: uppercase; letter-spacing: 0.5px;">
+                        Regulatory Allowance Findings & Discrepancy Ledger
+                    </div>
+                    <span id="quota-table-count" style="font-size: 12px; color: var(--text-3); font-weight: 600;"></span>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">ID</th>
+                                <th>Regulatory Standard</th>
+                                <th style="width: 90px;">Severity</th>
+                                <th>Statutory Threshold</th>
+                                <th>Actual Declared</th>
+                                <th>Discrepancy / Breach</th>
+                                <th style="width: 90px;">Status</th>
+                                <th>Mitigation Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="quota-findings-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB: AUTHENTICITY & FORENSICS -->
+    <div class="tab-content tab-pane" id="tab-authenticity">
+        <div class="panel-card">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title"><i data-lucide="fingerprint"></i> Document Authenticity & Digital Forensics Ledger</div>
+                    <div style="font-size: 13px; color: var(--color-slate-500); margin-top: 4px;">
+                        Cryptographic signature validation, PAdES X.509 checks, Error Level Analysis (ELA), and binary PDF structure forensics.
+                    </div>
+                </div>
+                <div id="auth-summary-badge"></div>
+            </div>
+
+            <!-- Package Summary Banner -->
+            <div class="auth-summary-banner" id="auth-package-banner"></div>
+
+            <!-- Per-Document Authenticity Cards Grid -->
+            <div class="authenticity-grid" id="authenticity-grid"></div>
+        </div>
+    </div>
+
+    <!-- TAB: COMPLIANCE -->
+    <div class="tab-content tab-pane" id="tab-compliance">
+        <div class="panel-card">
+            <div class="panel-header">
+                <div class="panel-title">Compliance Rule Validation</div>
+                <div class="panel-summary" id="comp-summary"></div>
+            </div>
+            <div class="comp-score-bar-wrap">
+                <div class="comp-score-label">Compliance Score</div>
+                <div class="comp-score-track">
+                    <div class="comp-score-fill" id="comp-score-fill"></div>
+                </div>
+                <div class="comp-score-pct" id="comp-score-pct">0%</div>
+            </div>
+
+            <!-- FRM Trade Route & Sanctions Intelligence Box -->
+            <div id="sanctions-frm-box" class="sanctions-frm-box">
+                <div class="sanctions-frm-header">
+                    <div class="sanctions-title">
+                        <i data-lucide="shield-alert"></i> FRM Trade Route & Sanctions Intelligence
+                    </div>
+                    <span id="sanctions-status-badge" class="sanctions-pill">CLEAR</span>
+                </div>
+                <div class="sanctions-frm-body" id="sanctions-frm-body"></div>
+            </div>
+
+            <!-- Account & Session Security Audit Card -->
+            <div id="account-scout-box" class="sanctions-frm-box">
+                <div class="sanctions-frm-header scout-header-flex">
+                    <div class="scout-header-left">
+                        <div class="sanctions-title">
+                            <i data-lucide="user-check"></i> Scout Account & Session Security Audit
+                        </div>
+                        <span id="scout-status-badge" class="sanctions-pill sanc-badge-clear">SECURE</span>
+                    </div>
+                    <!-- Live Security Scenario Switcher (Cases 1, 3–6) -->
+                    <div class="scout-simulator-control">
+                        <label for="scout-scenario-select" class="scout-sim-label">
+                            <i data-lucide="shield-alert"></i> Live Simulator:
+                        </label>
+                        <select id="scout-scenario-select" class="scout-sim-dropdown">
+                            <option value="CLEAN">Case 1: Clean Session (Normal Authentication)</option>
+                            <option value="MFA_FAIL">Case 3: MFA Lockout / Credential Stuffing</option>
+                            <option value="IMPOSSIBLE_TRAVEL">Case 4: Impossible Travel Velocity (Geo Anomaly)</option>
+                            <option value="CARDING_ATTACK">Case 5: Credit Card Testing Fraud (Carding Attack)</option>
+                            <option value="ACCOUNT_TAKEOVER">Case 6: Full Account Takeover (ATO Multi-Vector)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="sanctions-frm-body" id="scout-audit-body"></div>
+            </div>
+
+            <div class="rules-list" id="rules-list"></div>
+        </div>
+    </div>
+
+    <!-- TAB: RISK -->
+    <div class="tab-content tab-pane" id="tab-risk">
+        <div class="panel-card">
+            <div class="panel-header">
+                <div class="panel-title">Risk Assessment & Critical Alerts</div>
+                <div class="risk-level-badge" id="risk-level-badge"></div>
+            </div>
+            <div class="risk-alerts-list" id="risk-alerts-list"></div>
+        </div>
+    </div>
+
+    <!-- TAB: RECOMMENDATIONS -->
+    <div class="tab-content tab-pane" id="tab-recommendations">
+        <div class="panel-card">
+            <div class="panel-header">
+                <div class="panel-title">AI-Generated Recommendations</div>
+                <div class="panel-sub">Based on document extraction results, trade rules, and risk signals</div>
+            </div>
+            <div class="rec-list" id="rec-list"></div>
+        </div>
+    </div>
+
+    <!-- TAB: DESTINATION TRADE ADVISOR -->
+    <div class="tab-content tab-pane" id="tab-advisor">
+        <!-- Idle State (shown before analysis runs) -->
+        <div class="panel-card" id="advisor-idle-panel">
+            <div class="advisor-idle">
+                <div class="advisor-idle-icon">
+                    <i data-lucide="globe"></i>
+                </div>
+                <div class="advisor-idle-title">Destination Trade Advisor</div>
+                <div class="advisor-idle-sub">Destination country import requirements & compliance guidance based on your uploaded shipment documents.</div>
+                <button class="btn-advisor-run" id="btn-run-advisor">
+                    <i data-lucide="sparkles"></i>
+                    Generate Trade Guidance
+                </button>
+                <div class="advisor-idle-note">
+                    <i data-lucide="info"></i>
+                    Uses data already extracted from your uploaded documents. No additional uploads required.
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div class="panel-card advisor-loading-panel hidden" id="advisor-loading-panel">
+            <div class="advisor-loading">
+                <div class="advisor-loading-spinner"></div>
+                <div class="advisor-loading-text">Analyzing trade requirements & destination regulations...</div>
+                <div class="advisor-loading-sub">Evaluating HS code, destination country & product oversight</div>
+            </div>
+        </div>
+
+        <!-- Results State -->
+        <div class="advisor-results hidden" id="advisor-results">
+
+            <!-- Section 1: Shipment Summary -->
+            <div class="panel-card advisor-section">
+                <div class="advisor-section-header">
+                    <i data-lucide="package-open"></i>
+                    <span>Shipment Summary</span>
+                </div>
+                <div class="advisor-summary-grid" id="advisor-summary-grid"></div>
+            </div>
+
+            <!-- Section 2: Compliance Confidence -->
+            <div class="panel-card advisor-section">
+                <div class="advisor-section-header">
+                    <i data-lucide="shield-check"></i>
+                    <span>Compliance Confidence</span>
+                    <span class="advisor-ai-badge badge-green">Executive Readiness</span>
+                </div>
+                <div class="advisor-confidence-body">
+                    <div class="conf-kpi-main">
+                        <div class="conf-kpi-label">Overall Readiness</div>
+                        <div class="conf-kpi-row">
+                            <div class="conf-kpi-pct" id="advisor-conf-num">92%</div>
+                            <div class="conf-kpi-bar-track">
+                                <div class="conf-kpi-bar-fill" id="advisor-conf-fill" style="width: 92%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="conf-checks-label">Based on:</div>
+                    <div class="conf-checks-grid">
+                        <div class="conf-check-pill"><i data-lucide="check"></i> HS Code</div>
+                        <div class="conf-check-pill"><i data-lucide="check"></i> Destination Country</div>
+                        <div class="conf-check-pill"><i data-lucide="check"></i> Product Category</div>
+                        <div class="conf-check-pill"><i data-lucide="check"></i> Shipment Value</div>
+                        <div class="conf-check-pill"><i data-lucide="check"></i> Incoterms</div>
+                        <div class="conf-check-pill"><i data-lucide="check"></i> Trade Documents</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Trade Summary -->
+            <div class="panel-card advisor-section" id="advisor-trade-summary-card">
+                <div class="advisor-section-header">
+                    <i data-lucide="book-open"></i>
+                    <span>Trade Summary</span>
+                    <span class="advisor-ai-badge">Executive Overview</span>
+                </div>
+                <p class="advisor-trade-summary-text" id="advisor-trade-summary-text"></p>
+            </div>
+
+            <!-- Section 4: Likely Required Import Documents -->
+            <div class="panel-card advisor-section">
+                <div class="advisor-section-header">
+                    <i data-lucide="file-check"></i>
+                    <span>Likely Required Import Documents</span>
+                    <span class="advisor-ai-badge badge-green">Likely Required</span>
+                </div>
+                <div class="advisor-cards-grid" id="advisor-docs-grid"></div>
+            </div>
+
+            <!-- Section 5: Likely Regulatory Checks -->
+            <div class="panel-card advisor-section">
+                <div class="advisor-section-header">
+                    <i data-lucide="shield"></i>
+                    <span>Likely Regulatory Checks</span>
+                    <span class="advisor-ai-badge badge-yellow">Regulatory Oversight</span>
+                </div>
+                <div class="advisor-cards-grid" id="advisor-regulatory-grid"></div>
+            </div>
+
+            <!-- Section 6: Potential Customs Risks -->
+            <div class="panel-card advisor-section">
+                <div class="advisor-section-header">
+                    <i data-lucide="triangle-alert"></i>
+                    <span>Potential Customs Risks</span>
+                    <span class="advisor-ai-badge badge-red">Potential Risk</span>
+                </div>
+                <div class="advisor-cards-grid" id="advisor-risks-grid"></div>
+            </div>
+
+            <!-- Section 7: Import Recommendations -->
+            <div class="panel-card advisor-section">
+                <div class="advisor-section-header">
+                    <i data-lucide="lightbulb"></i>
+                    <span>Import Recommendations</span>
+                    <span class="advisor-ai-badge badge-blue">Compliance Recommendation</span>
+                </div>
+                <div class="advisor-rec-list" id="advisor-rec-list"></div>
+            </div>
+
+            <!-- Section 8: Disclaimer -->
+            <div class="panel-card advisor-disclaimer" id="advisor-disclaimer-card">
+                <div class="advisor-disclaimer-inner">
+                    <i data-lucide="info"></i>
+                    <p id="advisor-disclaimer-text">This information provides AI-assisted trade compliance guidance based on the uploaded shipment documents and extracted trade data. Final import requirements may vary depending on destination-country regulations and should be confirmed with the destination customs authority, licensed customs broker, or official government trade agencies before shipment.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     VIEW — ERROR
+═══════════════════════════════════════════════════════ -->
+<section class="view-panel" id="view-error">
+    <div class="error-card">
+        <div class="error-icon">
+            <i data-lucide="circle-alert"></i>
+        </div>
+        <h2 class="error-title" id="error-title">Analysis Failed</h2>
+        <p class="error-msg" id="error-msg"></p>
+        <div class="error-hint">
+            <strong>Troubleshooting Checklist:</strong>
+            <ul>
+                <li>Document processing took longer than expected. Please retry.</li>
+                <li>Ensure uploaded document is non-corrupt PDF, PNG, or JPG</li>
+                <li>Verify local server status at <code>http://localhost:8080/health</code></li>
+            </ul>
+        </div>
+        <button class="btn-primary" id="btn-retry">Try Again</button>
+    </div>
+</section>
+
+<!-- Contact Exporter Clarification Modal -->
+<div id="contactExporterModal" class="modal-overlay hidden">
+  <div class="modal-container" style="max-width: 640px;">
+    <div class="modal-top">
+      <div class="modal-title" style="display: flex; align-items: center; gap: 8px;">
+        <span class="modal-icon"><i data-lucide="scale"></i></span>
+        <h4>Official Regulatory Clarification & Discrepancy Notice</h4>
+      </div>
+      <button class="modal-close-icon" onclick="closeContactModal()">&times;</button>
+    </div>
+    <div class="modal-content-area">
+      <div class="input-block">
+        <label>Exporter Point of Contact & Recipient Email:</label>
+        <input type="text" id="modalExporterEmail" class="text-input" readonly />
+      </div>
+      <div class="input-block">
+        <label>Official Notice Subject:</label>
+        <input type="text" id="modalEmailSubject" class="text-input" readonly />
+      </div>
+      <div class="input-block">
+        <label>Discrepancy Findings, Statutory Violations & Required Mitigation:</label>
+        <textarea id="modalEmailBody" class="text-input textarea-box" rows="8" style="font-family: monospace; font-size: 12px; line-height: 1.5;"></textarea>
+      </div>
+    </div>
+    <div class="modal-actions" style="gap: 12px; flex-wrap: wrap;">
+      <button class="action-btn btn-primary" id="btn-send-clarification" onclick="sendExporterClarification()" style="display: inline-flex; align-items: center; gap: 6px;">
+        <i data-lucide="send"></i> Send Official Clarification Notice
+      </button>
+      <button class="action-btn btn-outline" id="btn-download-audit-pdf" onclick="downloadDiscrepancyAuditPDF()" style="display: inline-flex; align-items: center; gap: 6px;">
+        <i data-lucide="file-down"></i> Download Discrepancy Audit PDF
+      </button>
+      <button class="action-btn btn-dim" onclick="closeContactModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- ═══════════════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════════════ -->
+<footer class="app-footer">
+    <div class="footer-inner">
+        <div class="footer-left">
+            <span class="footer-copy">&copy; 2026 YellowSense Technologies</span>
+            <span class="footer-divider">•</span>
+            <span class="footer-tagline">AI-Powered Trade Verification Platform</span>
+        </div>
+        <div class="footer-links">
+            <a href="#" onclick="return false;">Privacy</a>
+            <a href="#" onclick="return false;">Terms</a>
+            <a href="#" onclick="return false;">Support</a>
+            <a href="#" onclick="return false;">Documentation</a>
+        </div>
+    </div>
+</footer>
+
+<!-- SheetJS for Excel exports -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="app.js?v=2.2"></script>
+<script>
+    // Initialize Lucide icons on load
+    document.addEventListener('DOMContentLoaded', () => {
+        if (window.lucide) lucide.createIcons();
+    });
+</script>
+</body>
+</html>
